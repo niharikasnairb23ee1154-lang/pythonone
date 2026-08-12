@@ -1,0 +1,374 @@
+import csv
+import os
+
+
+FILE_NAME = "employees.csv"
+
+
+# -------------------------------------------------
+# Employee Class
+# -------------------------------------------------
+
+class Employee:
+
+    def __init__(self, emp_id, name, department, basic_salary):
+        self.emp_id = emp_id
+        self.name = name
+        self.department = department
+        self.basic_salary = basic_salary
+
+    def calculate_salary(self):
+        # Salary components
+        hra = self.basic_salary * 0.20
+        da = self.basic_salary * 0.10
+        pf = self.basic_salary * 0.12
+
+        gross_salary = self.basic_salary + hra + da
+        net_salary = gross_salary - pf
+
+        return gross_salary, pf, net_salary
+
+    def display(self):
+        gross, pf, net = self.calculate_salary()
+
+        print("\nEmployee ID   :", self.emp_id)
+        print("Name          :", self.name)
+        print("Department    :", self.department)
+        print("Basic Salary  : ₹", self.basic_salary)
+        print("Gross Salary  : ₹", round(gross, 2))
+        print("PF Deduction  : ₹", round(pf, 2))
+        print("Net Salary    : ₹", round(net, 2))
+
+
+# -------------------------------------------------
+# Payroll System Class
+# -------------------------------------------------
+
+class PayrollSystem:
+
+    def __init__(self):
+        self.employees = []
+        self.load_employees()
+
+    # ---------------------------------------------
+    # Create CSV file
+    # ---------------------------------------------
+
+    def initialize_file(self):
+
+        if not os.path.exists(FILE_NAME):
+
+            with open(FILE_NAME, "w", newline="") as file:
+
+                writer = csv.writer(file)
+
+                writer.writerow([
+                    "Employee ID",
+                    "Name",
+                    "Department",
+                    "Basic Salary"
+                ])
+
+    # ---------------------------------------------
+    # Add Employee
+    # ---------------------------------------------
+
+    def add_employee(self):
+
+        try:
+
+            emp_id = input("Enter Employee ID: ").strip()
+
+            # Check duplicate ID
+            for employee in self.employees:
+                if employee.emp_id == emp_id:
+                    print("Employee ID already exists!")
+                    return
+
+            name = input("Enter Employee Name: ").strip()
+
+            if name == "":
+                raise ValueError("Name cannot be empty.")
+
+            department = input("Enter Department: ").strip()
+
+            if department == "":
+                raise ValueError("Department cannot be empty.")
+
+            basic_salary = float(input("Enter Basic Salary: "))
+
+            if basic_salary <= 0:
+                raise ValueError("Salary must be greater than zero.")
+
+            employee = Employee(
+                emp_id,
+                name,
+                department,
+                basic_salary
+            )
+
+            self.employees.append(employee)
+
+            self.save_employees()
+
+            print("\nEmployee added successfully!")
+
+        except ValueError as e:
+            print("Invalid input:", e)
+
+        except Exception as e:
+            print("An error occurred:", e)
+
+    # ---------------------------------------------
+    # View Employees
+    # ---------------------------------------------
+
+    def view_employees(self):
+
+        if len(self.employees) == 0:
+            print("\nNo employee records found.")
+            return
+
+        print("\n========== EMPLOYEE LIST ==========")
+
+        for employee in self.employees:
+            employee.display()
+            print("-----------------------------------")
+
+    # ---------------------------------------------
+    # Search Employee
+    # ---------------------------------------------
+
+    def search_employee(self):
+
+        emp_id = input("Enter Employee ID to search: ").strip()
+
+        for employee in self.employees:
+
+            if employee.emp_id == emp_id:
+
+                print("\nEmployee Found!")
+                employee.display()
+                return
+
+        print("Employee not found.")
+
+    # ---------------------------------------------
+    # Generate Payroll
+    # ---------------------------------------------
+
+    def generate_payroll(self):
+
+        if len(self.employees) == 0:
+            print("No employees available.")
+            return
+
+        print("\n========== PAYROLL ==========")
+
+        total_salary = 0
+
+        for employee in self.employees:
+
+            gross, pf, net = employee.calculate_salary()
+
+            print("\nEmployee:", employee.name)
+            print("ID:", employee.emp_id)
+            print("Basic Salary: ₹", employee.basic_salary)
+            print("Gross Salary: ₹", round(gross, 2))
+            print("PF Deduction: ₹", round(pf, 2))
+            print("Net Salary: ₹", round(net, 2))
+
+            total_salary += net
+
+        print("\nTotal Net Payroll: ₹", round(total_salary, 2))
+
+    # ---------------------------------------------
+    # Department Summary
+    # ---------------------------------------------
+
+    def department_summary(self):
+
+        if len(self.employees) == 0:
+            print("No employee records found.")
+            return
+
+        department_count = {}
+
+        for employee in self.employees:
+
+            department = employee.department
+
+            if department in department_count:
+                department_count[department] += 1
+            else:
+                department_count[department] = 1
+
+        print("\n====== DEPARTMENT SUMMARY ======")
+
+        for department, count in department_count.items():
+
+            print(
+                department,
+                "->",
+                count,
+                "employee(s)"
+            )
+
+        # Set used to display unique departments
+        departments = set(
+            employee.department
+            for employee in self.employees
+        )
+
+        print("\nUnique Departments:")
+        print(", ".join(departments))
+
+    # ---------------------------------------------
+    # Delete Employee
+    # ---------------------------------------------
+
+    def delete_employee(self):
+
+        emp_id = input("Enter Employee ID to delete: ").strip()
+
+        for employee in self.employees:
+
+            if employee.emp_id == emp_id:
+
+                self.employees.remove(employee)
+
+                self.save_employees()
+
+                print("Employee deleted successfully!")
+
+                return
+
+        print("Employee not found.")
+
+    # ---------------------------------------------
+    # Save Employees to CSV
+    # ---------------------------------------------
+
+    def save_employees(self):
+
+        try:
+
+            with open(FILE_NAME, "w", newline="") as file:
+
+                writer = csv.writer(file)
+
+                writer.writerow([
+                    "Employee ID",
+                    "Name",
+                    "Department",
+                    "Basic Salary"
+                ])
+
+                for employee in self.employees:
+
+                    writer.writerow([
+                        employee.emp_id,
+                        employee.name,
+                        employee.department,
+                        employee.basic_salary
+                    ])
+
+        except Exception as e:
+
+            print("Error while saving data:", e)
+
+    # ---------------------------------------------
+    # Load Employees from CSV
+    # ---------------------------------------------
+
+    def load_employees(self):
+
+        try:
+
+            self.initialize_file()
+
+            with open(FILE_NAME, "r") as file:
+
+                reader = csv.DictReader(file)
+
+                for row in reader:
+
+                    employee = Employee(
+                        row["Employee ID"],
+                        row["Name"],
+                        row["Department"],
+                        float(row["Basic Salary"])
+                    )
+
+                    self.employees.append(employee)
+
+        except FileNotFoundError:
+
+            print("Employee file not found.")
+
+        except ValueError:
+
+            print("Invalid data found in CSV file.")
+
+        except Exception as e:
+
+            print("Error while loading data:", e)
+
+    # ---------------------------------------------
+    # Main Menu
+    # ---------------------------------------------
+
+    def menu(self):
+
+        while True:
+
+            print("\n")
+            print("======================================")
+            print("       EMPLOYEE PAYROLL SYSTEM")
+            print("======================================")
+
+            print("1. Add Employee")
+            print("2. View All Employees")
+            print("3. Search Employee")
+            print("4. Generate Payroll")
+            print("5. Department Summary")
+            print("6. Delete Employee")
+            print("7. Exit")
+
+            choice = input("\nEnter your choice: ")
+
+            if choice == "1":
+                self.add_employee()
+
+            elif choice == "2":
+                self.view_employees()
+
+            elif choice == "3":
+                self.search_employee()
+
+            elif choice == "4":
+                self.generate_payroll()
+
+            elif choice == "5":
+                self.department_summary()
+
+            elif choice == "6":
+                self.delete_employee()
+
+            elif choice == "7":
+
+                print("\nThank you for using Employee Payroll System!")
+                break
+
+            else:
+
+                print("\nInvalid choice!")
+                print("Please enter a number between 1 and 7.")
+
+
+# -------------------------------------------------
+# Main Program
+# -------------------------------------------------
+
+payroll = PayrollSystem()
+payroll.menu()
