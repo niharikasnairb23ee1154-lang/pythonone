@@ -1,0 +1,218 @@
+import numpy as np
+
+print("NumPy version:", np.__version__)
+arr_1d = np.array([10, 20, 30, 40, 50])
+
+print("1D Array:")
+print(arr_1d)
+
+arr_2d = np.array([
+    [10, 20, 30],
+    [40, 50, 60]
+])
+
+print("2D Array:")
+print(arr_2d)
+
+arr_3d = np.array([
+    [[1, 2], [3, 4]],
+    [[5, 6], [7, 8]]
+])
+
+print("3D Array:")
+print(arr_3d)
+
+print("1D Array:")
+print("Dimensions:", arr_1d.ndim)
+print("Shape:", arr_1d.shape)
+print("Data Type:", arr_1d.dtype)
+
+print("\n2D Array:")
+print("Dimensions:", arr_2d.ndim)
+print("Shape:", arr_2d.shape)
+print("Data Type:", arr_2d.dtype)
+
+print("\n3D Array:")
+print("Dimensions:", arr_3d.ndim)
+print("Shape:", arr_3d.shape)
+print("Data Type:", arr_3d.dtype)
+
+arr = np.array([10, 20, 30, 40, 50])
+
+print("First element:", arr[0])
+print("Third element:", arr[2])
+
+print("Elements from index 1 to 3:", arr[1:4])
+print("First three elements:", arr[:3])
+print("Last two elements:", arr[-2:])
+
+matrix = np.array([
+    [10, 20, 30],
+    [40, 50, 60],
+    [70, 80, 90]
+])
+
+print("Element at row 2, column 3:", matrix[1, 2])
+
+print("\nFirst row:")
+print(matrix[0])
+
+print("\nFirst two rows:")
+print(matrix[:2])
+
+print("\nSecond column:")
+print(matrix[:, 1])
+
+arr = np.arange(1, 13)
+
+print("Original Array:")
+print(arr)
+
+reshaped = arr.reshape(3, 4)
+
+print("\nReshaped Array:")
+print(reshaped)
+
+flattened = reshaped.flatten()
+
+print("Flattened Array:")
+print(flattened)
+
+zeros_array = np.zeros((2, 3))
+
+print("Zeros:")
+print(zeros_array)
+
+ones_array = np.ones((2, 3))
+
+print("\nOnes:")
+print(ones_array)
+
+arr = np.arange(1, 11, 2)
+
+print("Array using arange:")
+print(arr)
+
+arr = np.arange(1, 11, 2)
+
+print("Array using arange:")
+print(arr)
+
+arr = np.linspace(0, 10, 6)
+
+print("Array using linspace:")
+print(arr)
+
+a = np.array([10, 20, 30, 40])
+b = np.array([2, 4, 5, 8])
+
+print("Addition:", a + b)
+print("Subtraction:", a - b)
+print("Multiplication:", a * b)
+print("Division:", a / b)
+
+numbers = np.array([1, 2, 3, 4, 5])
+
+print("Original:", numbers)
+print("Square:", numbers ** 2)
+print("Double:", numbers * 2)
+print("Add 10:", numbers + 10)
+
+numbers = np.array([1, 4, 9, 16, 25])
+
+print("Square Root:", np.sqrt(numbers))
+print("Exponential:", np.exp(numbers))
+print("Logarithm:", np.log(numbers))
+
+marks = np.array([45, 78, 92, 56, 88, 34, 67])
+
+# Select marks greater than 60
+mask = marks > 60
+
+print("Boolean Mask:")
+print(mask)
+
+print("\nMarks greater than 60:")
+print(marks[mask])
+marks = np.array([45, 78, 92, 56, 88, 34, 67])
+
+selected = marks[(marks >= 60) & (marks <= 90)]
+
+print("Marks between 60 and 90:")
+print(selected)
+marks = np.array([
+    [70, 80, 90],
+    [60, 75, 85]
+])
+
+bonus = np.array([5, 5, 5])
+
+result = marks + bonus
+
+print("Original Marks:")
+print(marks)
+
+print("\nAfter Broadcasting:")
+print(result)
+
+data = np.array([10, 20, 30, 40, 50])
+
+print("Data:", data)
+
+print("Sum:", np.sum(data))
+print("Mean:", np.mean(data))
+print("Minimum:", np.min(data))
+print("Maximum:", np.max(data))
+print("Median:", np.median(data))
+
+data = np.array([
+    [10, 20, 30],
+    [40, 50, 60],
+    [70, 80, 90]
+])
+
+print("Total:", np.sum(data))
+print("Mean:", np.mean(data))
+print("Minimum:", np.min(data))
+print("Maximum:", np.max(data))
+print("Median:", np.median(data))
+
+print("\nColumn-wise Sum:")
+print(np.sum(data, axis=0))
+
+print("\nRow-wise Sum:")
+print(np.sum(data, axis=1))
+
+# Student marks in five subjects
+marks = np.array([
+    [85, 78, 92, 88, 90],
+    [72, 80, 75, 79, 85],
+    [90, 95, 88, 92, 94],
+    [60, 65, 70, 68, 72]
+])
+
+print("Student Marks:")
+print(marks)
+
+# Total marks of each student
+total = np.sum(marks, axis=1)
+
+# Average marks of each student
+average = np.mean(marks, axis=1)
+
+print("\nTotal Marks:")
+print(total)
+
+print("\nAverage Marks:")
+print(average)
+
+# Highest and lowest marks
+print("\nHighest Mark:", np.max(marks))
+print("Lowest Mark:", np.min(marks))
+
+# Students with average above 80
+high_performers = average > 80
+
+print("\nStudents with average above 80:")
+print(average[high_performers])
+
