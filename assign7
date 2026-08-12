@@ -1,0 +1,257 @@
+# ============================================================
+# DATASET SUMMARY REPORT USING PYTHON AND PANDAS
+# ============================================================
+
+# Import required libraries
+import pandas as pd
+import numpy as np
+from google.colab import files
+import io
+
+# ============================================================
+# 1. UPLOAD AND LOAD CSV DATASET
+# ============================================================
+
+print("Please upload your CSV dataset:")
+uploaded = files.upload()
+
+file_name = list(uploaded.keys())[0]
+
+# Load CSV into Pandas DataFrame
+df = pd.read_csv(io.BytesIO(uploaded[file_name]))
+
+print("\nDataset loaded successfully!")
+print("File name:", file_name)
+
+
+# ============================================================
+# 2. DISPLAY DATASET
+# ============================================================
+
+print("\n========== COMPLETE DATASET ==========")
+display(df)
+
+
+# ============================================================
+# 3. FIRST FEW ROWS
+# ============================================================
+
+print("\n========== FIRST 5 ROWS ==========")
+display(df.head())
+
+
+# ============================================================
+# 4. LAST FEW ROWS
+# ============================================================
+
+print("\n========== LAST 5 ROWS ==========")
+display(df.tail())
+
+
+# ============================================================
+# 5. RANDOM SAMPLE
+# ============================================================
+
+print("\n========== RANDOM 5 ROWS ==========")
+display(df.sample(min(5, len(df))))
+
+
+# ============================================================
+# 6. DATASET SHAPE
+# ============================================================
+
+print("\n========== DATASET SHAPE ==========")
+
+rows, columns = df.shape
+
+print("Number of Rows:", rows)
+print("Number of Columns:", columns)
+print("Shape:", df.shape)
+
+
+# ============================================================
+# 7. COLUMN NAMES
+# ============================================================
+
+print("\n========== COLUMN NAMES ==========")
+
+print("Columns:")
+for column in df.columns:
+    print("-", column)
+
+
+# ============================================================
+# 8. DATASET INDEX
+# ============================================================
+
+print("\n========== DATASET INDEX ==========")
+
+print(df.index)
+
+
+# ============================================================
+# 9. DATA TYPES
+# ============================================================
+
+print("\n========== DATA TYPES ==========")
+
+print(df.dtypes)
+
+
+# ============================================================
+# 10. DATASET INFORMATION
+# ============================================================
+
+print("\n========== DATASET INFORMATION ==========")
+
+df.info()
+
+
+# ============================================================
+# 11. DESCRIPTIVE STATISTICS
+# ============================================================
+
+print("\n========== DESCRIPTIVE STATISTICS ==========")
+
+display(df.describe())
+
+
+# ============================================================
+# 12. DESCRIPTIVE STATISTICS FOR ALL COLUMNS
+# ============================================================
+
+print("\n========== STATISTICS FOR ALL COLUMNS ==========")
+
+display(df.describe(include="all"))
+
+
+# ============================================================
+# 13. CHECK MISSING VALUES
+# ============================================================
+
+print("\n========== MISSING VALUES ==========")
+
+missing_values = df.isnull().sum()
+
+print(missing_values)
+
+
+# ============================================================
+# 14. MISSING VALUE PERCENTAGE
+# ============================================================
+
+print("\n========== MISSING VALUE PERCENTAGE ==========")
+
+missing_percentage = (df.isnull().sum() / len(df)) * 100
+
+print(missing_percentage)
+
+
+# ============================================================
+# 15. COLUMNS WITH MISSING VALUES
+# ============================================================
+
+print("\n========== COLUMNS WITH MISSING VALUES ==========")
+
+missing = df.isnull().sum()
+
+if missing.sum() == 0:
+    print("No missing values found.")
+else:
+    print(missing[missing > 0])
+
+
+# ============================================================
+# 16. UNIQUE VALUES
+# ============================================================
+
+print("\n========== UNIQUE VALUES ==========")
+
+for column in df.columns:
+    print(column, ":", df[column].nunique())
+
+
+# ============================================================
+# 17. DUPLICATE RECORDS
+# ============================================================
+
+print("\n========== DUPLICATE RECORDS ==========")
+
+duplicates = df.duplicated().sum()
+
+print("Number of duplicate rows:", duplicates)
+
+
+# ============================================================
+# 18. NUMERICAL AND CATEGORICAL FEATURES
+# ============================================================
+
+print("\n========== NUMERICAL FEATURES ==========")
+
+numerical_columns = df.select_dtypes(include=np.number).columns
+
+for column in numerical_columns:
+    print("-", column)
+
+
+print("\n========== CATEGORICAL FEATURES ==========")
+
+categorical_columns = df.select_dtypes(exclude=np.number).columns
+
+for column in categorical_columns:
+    print("-", column)
+
+
+# ============================================================
+# 19. DATASET SUMMARY
+# ============================================================
+
+print("\n==============================================")
+print("              DATASET SUMMARY")
+print("==============================================")
+
+print("Dataset Name:", file_name)
+print("Number of Rows:", df.shape[0])
+print("Number of Columns:", df.shape[1])
+
+print("\nAvailable Features:")
+for column in df.columns:
+    print("-", column)
+
+print("\nNumber of Numerical Features:", len(numerical_columns))
+print("Number of Categorical Features:", len(categorical_columns))
+
+print("\nTotal Missing Values:", df.isnull().sum().sum())
+print("Total Duplicate Rows:", df.duplicated().sum())
+
+
+# ============================================================
+# 20. BASIC OBSERVATIONS
+# ============================================================
+
+print("\n==============================================")
+print("              BASIC OBSERVATIONS")
+print("==============================================")
+
+print(f"1. The dataset contains {df.shape[0]} rows and {df.shape[1]} columns.")
+
+print(f"2. The dataset contains {len(numerical_columns)} numerical features.")
+
+print(f"3. The dataset contains {len(categorical_columns)} categorical features.")
+
+if df.isnull().sum().sum() == 0:
+    print("4. No missing values were found in the dataset.")
+else:
+    print(f"4. There are {df.isnull().sum().sum()} missing values in the dataset.")
+
+if df.duplicated().sum() == 0:
+    print("5. No duplicate records were found.")
+else:
+    print(f"5. There are {df.duplicated().sum()} duplicate records.")
+
+print("6. The data types of the columns are:")
+print(df.dtypes)
+
+print("\n==============================================")
+print("          DATASET ANALYSIS COMPLETED")
+print("==============================================")
