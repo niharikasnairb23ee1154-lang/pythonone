@@ -1,0 +1,194 @@
+# ============================================
+# 2. PROCESSED E-COMMERCE DATASET
+# ============================================
+
+import pandas as pd
+from google.colab import files
+
+# Upload Orders, Customers and Products CSV files
+uploaded = files.upload()
+
+# Display uploaded filenames
+print("Uploaded files:")
+for file in uploaded.keys():
+    print(file)
+
+
+# --------------------------------------------
+# LOAD DATASETS
+# --------------------------------------------
+
+orders_file = [f for f in uploaded.keys() if "order" in f.lower()][0]
+customers_file = [f for f in uploaded.keys() if "customer" in f.lower()][0]
+products_file = [f for f in uploaded.keys() if "product" in f.lower()][0]
+
+orders = pd.read_csv(orders_file)
+customers = pd.read_csv(customers_file)
+products = pd.read_csv(products_file)
+
+print("\nOrders:")
+display(orders.head())
+
+print("\nCustomers:")
+display(customers.head())
+
+print("\nProducts:")
+display(products.head())
+
+
+# --------------------------------------------
+# DATASET INFORMATION
+# --------------------------------------------
+
+print("\nOrders Shape:", orders.shape)
+print("Customers Shape:", customers.shape)
+print("Products Shape:", products.shape)
+
+print("\nOrders Columns:")
+print(orders.columns.tolist())
+
+print("\nCustomers Columns:")
+print(customers.columns.tolist())
+
+print("\nProducts Columns:")
+print(products.columns.tolist())
+
+
+# --------------------------------------------
+# MERGE DATASETS
+# --------------------------------------------
+
+# Merge Orders with Customers
+processed = pd.merge(
+    orders,
+    customers,
+    on="CustomerID",
+    how="left"
+)
+
+print("\nAfter merging Orders and Customers:")
+display(processed.head())
+
+# Merge with Products
+processed = pd.merge(
+    processed,
+    products,
+    on="ProductID",
+    how="left"
+)
+
+print("\nAfter merging Products:")
+display(processed.head())
+
+
+# --------------------------------------------
+# CONCAT DEMONSTRATION
+# --------------------------------------------
+
+# Demonstrate concat by combining two parts of the Orders DataFrame
+part1 = orders.iloc[:len(orders)//2]
+part2 = orders.iloc[len(orders)//2:]
+
+orders_combined = pd.concat(
+    [part1, part2],
+    ignore_index=True
+)
+
+print("\nOrders after concat:")
+display(orders_combined.head())
+
+print("Original Orders Shape:", orders.shape)
+print("Concatenated Orders Shape:", orders_combined.shape)
+
+
+# --------------------------------------------
+# DATETIME OPERATIONS
+# --------------------------------------------
+
+# Convert OrderDate to datetime
+processed["OrderDate"] = pd.to_datetime(
+    processed["OrderDate"],
+    errors="coerce"
+)
+
+# Extract date information
+processed["Order_Year"] = processed["OrderDate"].dt.year
+processed["Order_Month"] = processed["OrderDate"].dt.month
+processed["Order_Month_Name"] = processed["OrderDate"].dt.month_name()
+processed["Order_Day"] = processed["OrderDate"].dt.day
+processed["Order_Day_Name"] = processed["OrderDate"].dt.day_name()
+
+print("\nDateTime Transformed Data:")
+display(
+    processed[
+        ["OrderDate", "Order_Year", "Order_Month",
+         "Order_Month_Name", "Order_Day", "Order_Day_Name"]
+    ].head()
+)
+
+
+# --------------------------------------------
+# APPLY() OPERATIONS
+# --------------------------------------------
+
+# Create Total Amount if Quantity and Price exist
+if "Quantity" in processed.columns and "Price" in processed.columns:
+    processed["Total_Amount"] = processed.apply(
+        lambda row: row["Quantity"] * row["Price"],
+        axis=1
+    )
+
+# Create order size category
+if "Total_Amount" in processed.columns:
+    processed["Order_Size"] = processed["Total_Amount"].apply(
+        lambda x: "High"
+        if x >= 1000
+        else ("Medium" if x >= 500 else "Low")
+    )
+
+print("\nAfter apply() transformations:")
+display(processed.head())
+
+
+# --------------------------------------------
+# CLEAN DATASET
+# --------------------------------------------
+
+# Remove duplicate rows
+processed = processed.drop_duplicates()
+
+# Reset index
+processed = processed.reset_index(drop=True)
+
+print("\nProcessed Dataset Information:")
+processed.info()
+
+print("\nMissing Values:")
+print(processed.isnull().sum())
+
+
+# --------------------------------------------
+# DISPLAY FINAL DATASET
+# --------------------------------------------
+
+print("\n========== FINAL PROCESSED DATASET ==========")
+display(processed.head(10))
+
+print("\nFinal Shape:", processed.shape)
+
+
+# --------------------------------------------
+# EXPORT CSV
+# --------------------------------------------
+
+output_file = "processed_ecommerce_dataset.csv"
+
+processed.to_csv(
+    output_file,
+    index=False
+)
+
+print("\nCSV file created successfully:", output_file)
+
+# Download the processed dataset
+files.download(output_file)
