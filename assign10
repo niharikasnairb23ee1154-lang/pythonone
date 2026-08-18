@@ -1,0 +1,287 @@
+# ============================================
+# 3. FLIGHT OPERATIONS DATA ANALYSIS
+# ============================================
+
+import pandas as pd
+import numpy as np
+from google.colab import files
+
+# Upload Flight Operations CSV
+uploaded = files.upload()
+
+filename = list(uploaded.keys())[0]
+
+# Load dataset
+df = pd.read_csv(filename)
+
+print("========== FIRST 5 ROWS ==========")
+display(df.head())
+
+
+# --------------------------------------------
+# UNDERSTANDING THE DATASET
+# --------------------------------------------
+
+print("\n========== LAST 5 ROWS ==========")
+display(df.tail())
+
+print("\n========== RANDOM SAMPLE ==========")
+display(df.sample(min(5, len(df))))
+
+print("\n========== DATASET SHAPE ==========")
+print(df.shape)
+
+print("\n========== COLUMN NAMES ==========")
+print(df.columns.tolist())
+
+print("\n========== INDEX ==========")
+print(df.index)
+
+print("\n========== DATA TYPES ==========")
+print(df.dtypes)
+
+print("\n========== DATASET INFO ==========")
+df.info()
+
+print("\n========== DESCRIPTIVE STATISTICS ==========")
+display(df.describe(include="all"))
+
+print("\n========== MISSING VALUES ==========")
+print(df.isnull().sum())
+
+print("\n========== DUPLICATE ROWS ==========")
+print(df.duplicated().sum())
+
+
+# --------------------------------------------
+# DATA SELECTION
+# --------------------------------------------
+
+print("\n========== SELECTED COLUMNS ==========")
+
+# Display available columns
+print(df.columns.tolist())
+
+# Select first few columns automatically
+display(df.iloc[:, :min(5, len(df.columns))].head())
+
+
+# --------------------------------------------
+# FILTERING
+# --------------------------------------------
+
+# Find numerical columns
+numeric_columns = df.select_dtypes(include=np.number).columns
+
+if len(numeric_columns) > 0:
+
+    first_numeric = numeric_columns[0]
+
+    print(f"\nRecords where {first_numeric} is above average:")
+
+    average_value = df[first_numeric].mean()
+
+    display(
+        df[df[first_numeric] > average_value].head(10)
+    )
+
+
+# --------------------------------------------
+# SORTING
+# --------------------------------------------
+
+if len(numeric_columns) > 0:
+
+    first_numeric = numeric_columns[0]
+
+    print(f"\nTop records based on {first_numeric}:")
+
+    display(
+        df.sort_values(
+            by=first_numeric,
+            ascending=False
+        ).head(10)
+    )
+
+
+# --------------------------------------------
+# CATEGORICAL ANALYSIS
+# --------------------------------------------
+
+categorical_columns = df.select_dtypes(
+    include="object"
+).columns
+
+print("\n========== CATEGORICAL COLUMNS ==========")
+print(categorical_columns.tolist())
+
+if len(categorical_columns) > 0:
+
+    first_category = categorical_columns[0]
+
+    print(f"\nValue counts for {first_category}:")
+
+    display(
+        df[first_category].value_counts().head(10)
+    )
+
+
+# --------------------------------------------
+# GROUPBY AND AGGREGATION
+# --------------------------------------------
+
+if len(categorical_columns) > 0 and len(numeric_columns) > 0:
+
+    category_column = categorical_columns[0]
+    numeric_column = numeric_columns[0]
+
+    grouped_data = df.groupby(
+        category_column
+    )[numeric_column].agg(
+        ["count", "sum", "mean", "max", "min"]
+    ).sort_values(
+        "sum",
+        ascending=False
+    )
+
+    print(
+        f"\n========== {numeric_column.upper()} BY "
+        f"{category_column.upper()} =========="
+    )
+
+    display(grouped_data)
+
+
+# --------------------------------------------
+# ADDITIONAL NUMERICAL ANALYSIS
+# --------------------------------------------
+
+print("\n========== NUMERICAL ANALYSIS ==========")
+
+for column in numeric_columns:
+
+    print(f"\n{column}")
+    print("Total:", df[column].sum())
+    print("Average:", df[column].mean())
+    print("Maximum:", df[column].max())
+    print("Minimum:", df[column].min())
+
+
+# --------------------------------------------
+# DATE ANALYSIS
+# --------------------------------------------
+
+date_columns = []
+
+for column in df.columns:
+
+    if "date" in column.lower():
+
+        df[column] = pd.to_datetime(
+            df[column],
+            errors="coerce"
+        )
+
+        date_columns.append(column)
+
+
+if len(date_columns) > 0:
+
+    date_column = date_columns[0]
+
+    df["Year"] = df[date_column].dt.year
+    df["Month"] = df[date_column].dt.month
+    df["Day"] = df[date_column].dt.day
+    df["Day_Name"] = df[date_column].dt.day_name()
+
+    print("\n========== DATE ANALYSIS ==========")
+    display(
+        df[
+            [date_column, "Year", "Month",
+             "Day", "Day_Name"]
+        ].head()
+    )
+
+
+# --------------------------------------------
+# MEANINGFUL QUESTIONS
+# --------------------------------------------
+
+print("\n========== KEY FINDINGS ==========")
+
+print("1. Dataset contains", df.shape[0], "records and",
+      df.shape[1], "columns.")
+
+print("2. The dataset contains",
+      df.isnull().sum().sum(),
+      "missing values.")
+
+print("3. The dataset contains",
+      df.duplicated().sum(),
+      "duplicate records.")
+
+if len(numeric_columns) > 0:
+
+    for column in numeric_columns[:3]:
+
+        print(
+            f"4. Average {column}: "
+            f"{df[column].mean():.2f}"
+        )
+
+        print(
+            f"5. Highest {column}: "
+            f"{df[column].max()}"
+        )
+
+if len(categorical_columns) > 0:
+
+    for column in categorical_columns[:3]:
+
+        most_common = df[column].mode()
+
+        if len(most_common) > 0:
+
+            print(
+                f"6. Most common {column}: "
+                f"{most_common.iloc[0]}"
+            )
+
+
+# --------------------------------------------
+# FINAL OBSERVATIONS
+# --------------------------------------------
+
+print("\n========== 8 OBSERVATIONS ==========")
+
+print("1. The dataset was successfully loaded and inspected using Pandas.")
+
+print("2. The structure, columns, data types and statistical properties "
+      "of the dataset were analyzed.")
+
+print("3. Missing values and duplicate records were identified.")
+
+if len(numeric_columns) > 0:
+    print(
+        f"4. {numeric_columns[0]} has an average value of "
+        f"{df[numeric_columns[0]].mean():.2f}."
+    )
+
+if len(categorical_columns) > 0:
+    most_common = df[categorical_columns[0]].mode()
+
+    if len(most_common) > 0:
+        print(
+            f"5. The most frequently occurring "
+            f"{categorical_columns[0]} is "
+            f"{most_common.iloc[0]}."
+        )
+
+print("6. Sorting operations helped identify the highest and lowest "
+      "records.")
+
+print("7. Groupby and aggregation operations helped compare flight "
+      "operations across different categories.")
+
+print("8. Data filtering and transformation helped identify useful "
+      "patterns and relationships in the flight operations data.")
