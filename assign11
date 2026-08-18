@@ -1,0 +1,327 @@
+# ============================================
+# 4. CLEANED COMPANY EMPLOYEE DATASET
+# ============================================
+
+import pandas as pd
+import numpy as np
+from google.colab import files
+
+# Upload messy company dataset
+uploaded = files.upload()
+
+filename = list(uploaded.keys())[0]
+
+# Load dataset
+df = pd.read_csv(filename)
+
+# Keep a copy of original dataset
+original_df = df.copy()
+
+print("========== ORIGINAL DATASET ==========")
+display(df.head())
+
+print("\nOriginal Shape:", df.shape)
+
+
+# --------------------------------------------
+# INSPECT DATASET
+# --------------------------------------------
+
+print("\n========== DATASET INFORMATION ==========")
+df.info()
+
+print("\n========== DATA TYPES ==========")
+print(df.dtypes)
+
+print("\n========== STATISTICS ==========")
+display(df.describe(include="all"))
+
+print("\n========== MISSING VALUES ==========")
+print(df.isnull().sum())
+
+print("\n========== MISSING VALUE COUNT ==========")
+print(df.isnull().sum().sum())
+
+print("\n========== DUPLICATE RECORDS ==========")
+print(df.duplicated().sum())
+
+
+# --------------------------------------------
+# REMOVE EXTRA SPACES FROM COLUMN NAMES
+# --------------------------------------------
+
+df.columns = df.columns.str.strip()
+
+# Remove leading/trailing spaces from text values
+for column in df.select_dtypes(include="object").columns:
+
+    df[column] = df[column].apply(
+        lambda x: x.strip() if isinstance(x, str) else x
+    )
+
+
+# --------------------------------------------
+# IDENTIFY INCONSISTENT TEXT ENTRIES
+# --------------------------------------------
+
+for column in df.select_dtypes(include="object").columns:
+
+    print(f"\nUnique values in {column}:")
+    print(df[column].dropna().unique()[:20])
+
+
+# --------------------------------------------
+# STANDARDIZE COMMON TEXT COLUMNS
+# --------------------------------------------
+
+# Standardize Gender if available
+if "Gender" in df.columns:
+
+    df["Gender"] = df["Gender"].astype(str).str.strip().str.lower()
+
+    df["Gender"] = df["Gender"].replace({
+        "m": "Male",
+        "male": "Male",
+        "man": "Male",
+        "f": "Female",
+        "female": "Female",
+        "woman": "Female"
+    })
+
+
+# Standardize Department if available
+if "Department" in df.columns:
+
+    df["Department"] = (
+        df["Department"]
+        .astype(str)
+        .str.strip()
+        .str.title()
+    )
+
+
+# Standardize names if available
+if "Name" in df.columns:
+
+    df["Name"] = (
+        df["Name"]
+        .astype(str)
+        .str.strip()
+        .str.title()
+    )
+
+
+# --------------------------------------------
+# CONVERT NUMERICAL COLUMNS
+# --------------------------------------------
+
+# Convert common numerical columns
+possible_numeric_columns = [
+    "Age",
+    "Salary",
+    "Experience",
+    "Years of Experience",
+    "EmployeeID",
+    "Employee ID"
+]
+
+for column in possible_numeric_columns:
+
+    if column in df.columns:
+
+        df[column] = pd.to_numeric(
+            df[column],
+            errors="coerce"
+        )
+
+
+# --------------------------------------------
+# HANDLE MISSING VALUES
+# --------------------------------------------
+
+print("\n========== MISSING VALUES BEFORE CLEANING ==========")
+print(df.isnull().sum())
+
+
+# Numerical columns → median imputation
+numeric_columns = df.select_dtypes(
+    include=np.number
+).columns
+
+for column in numeric_columns:
+
+    if df[column].isnull().sum() > 0:
+
+        df[column] = df[column].fillna(
+            df[column].median()
+        )
+
+
+# Categorical columns → mode imputation
+categorical_columns = df.select_dtypes(
+    include="object"
+).columns
+
+for column in categorical_columns:
+
+    if df[column].isnull().sum() > 0:
+
+        mode_value = df[column].mode()
+
+        if len(mode_value) > 0:
+
+            df[column] = df[column].fillna(
+                mode_value.iloc[0]
+            )
+
+
+# --------------------------------------------
+# FORWARD FILL DEMONSTRATION
+# --------------------------------------------
+
+# Use forward filling only for remaining values
+# where it makes logical sense.
+
+df = df.ffill()
+
+
+# --------------------------------------------
+# DROP REMAINING MISSING VALUES
+# --------------------------------------------
+
+df = df.dropna()
+
+
+# --------------------------------------------
+# REMOVE DUPLICATES
+# --------------------------------------------
+
+duplicates_before = df.duplicated().sum()
+
+df = df.drop_duplicates()
+
+duplicates_after = df.duplicated().sum()
+
+
+# --------------------------------------------
+# VERIFY DATA TYPES
+# --------------------------------------------
+
+print("\n========== DATA TYPES AFTER CLEANING ==========")
+print(df.dtypes)
+
+
+# --------------------------------------------
+# VERIFY MISSING VALUES
+# --------------------------------------------
+
+print("\n========== MISSING VALUES AFTER CLEANING ==========")
+print(df.isnull().sum())
+
+print(
+    "\nTotal missing values after cleaning:",
+    df.isnull().sum().sum()
+)
+
+
+# --------------------------------------------
+# VERIFY DUPLICATES
+# --------------------------------------------
+
+print("\nDuplicate records after cleaning:",
+      df.duplicated().sum())
+
+
+# --------------------------------------------
+# BEFORE VS AFTER COMPARISON
+# --------------------------------------------
+
+print("\n========== BEFORE VS AFTER CLEANING ==========")
+
+print("Original number of rows:",
+      original_df.shape[0])
+
+print("Cleaned number of rows:",
+      df.shape[0])
+
+print("Original number of columns:",
+      original_df.shape[1])
+
+print("Cleaned number of columns:",
+      df.shape[1])
+
+print(
+    "Original missing values:",
+    original_df.isnull().sum().sum()
+)
+
+print(
+    "Cleaned missing values:",
+    df.isnull().sum().sum()
+)
+
+print(
+    "Original duplicate records:",
+    original_df.duplicated().sum()
+)
+
+print(
+    "Cleaned duplicate records:",
+    df.duplicated().sum()
+)
+
+
+# --------------------------------------------
+# DISPLAY CLEANED DATASET
+# --------------------------------------------
+
+print("\n========== CLEANED DATASET ==========")
+display(df.head(10))
+
+
+# --------------------------------------------
+# FINAL INFORMATION
+# --------------------------------------------
+
+print("\n========== FINAL DATASET INFORMATION ==========")
+df.info()
+
+
+# --------------------------------------------
+# EXPORT CLEANED DATASET
+# --------------------------------------------
+
+output_file = "cleaned_company_employee_dataset.csv"
+
+df.to_csv(
+    output_file,
+    index=False
+)
+
+print(
+    "\nCleaned dataset exported successfully as:",
+    output_file
+)
+
+
+# --------------------------------------------
+# CLEANING SUMMARY
+# --------------------------------------------
+
+print("\n========== CLEANING SUMMARY ==========")
+
+print("1. Loaded and inspected the original dataset.")
+print("2. Checked missing values and duplicate records.")
+print("3. Removed extra spaces from column names and text values.")
+print("4. Standardized inconsistent categorical entries.")
+print("5. Converted numerical columns to suitable numeric data types.")
+print("6. Filled numerical missing values using median imputation.")
+print("7. Filled categorical missing values using mode imputation.")
+print("8. Used forward filling for remaining missing values where appropriate.")
+print("9. Removed any remaining rows containing missing values.")
+print("10. Removed duplicate records using drop_duplicates().")
+print("11. Compared the dataset before and after cleaning.")
+print("12. Exported the final cleaned dataset as a CSV file.")
+
+# Download cleaned CSV
+files.download(output_file)
