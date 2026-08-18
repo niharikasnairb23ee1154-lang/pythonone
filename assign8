@@ -1,0 +1,190 @@
+# ============================================
+# 1. E-COMMERCE SALES DATA ANALYSIS
+# ============================================
+
+import pandas as pd
+import numpy as np
+from google.colab import files
+
+# Upload the CSV file
+uploaded = files.upload()
+
+# Get the uploaded filename
+filename = list(uploaded.keys())[0]
+
+# Load dataset
+df = pd.read_csv(filename)
+
+# Display first few rows
+print("First 5 rows:")
+display(df.head())
+
+# Display last few rows
+print("\nLast 5 rows:")
+display(df.tail())
+
+# Dataset information
+print("\nDataset Information:")
+df.info()
+
+# Shape of dataset
+print("\nShape:", df.shape)
+
+# Column names
+print("\nColumns:")
+print(df.columns.tolist())
+
+# Statistical summary
+print("\nStatistical Summary:")
+display(df.describe(include="all"))
+
+# Check missing values
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+# Check duplicate records
+print("\nDuplicate Records:", df.duplicated().sum())
+
+
+# --------------------------------------------
+# DATA SELECTION
+# --------------------------------------------
+
+print("\nSelected Columns:")
+display(df[["Category", "City", "Product", "Payment Method"]].head())
+
+# Select a particular column
+print("\nProduct Column:")
+display(df["Product"].head())
+
+
+# --------------------------------------------
+# FILTERING
+# --------------------------------------------
+
+# Orders with sales greater than 1000
+print("\nOrders with Sales > 1000:")
+display(df[df["Sales"] > 1000])
+
+# Orders with quantity greater than 5
+print("\nOrders with Quantity > 5:")
+display(df[df["Quantity"] > 5])
+
+# Orders using a specific payment method
+print("\nOrders using Credit Card:")
+display(df[df["Payment Method"] == "Credit Card"])
+
+# Orders from a particular city
+city_name = df["City"].iloc[0]
+print(f"\nOrders from {city_name}:")
+display(df[df["City"] == city_name])
+
+
+# --------------------------------------------
+# SORTING
+# --------------------------------------------
+
+# Sort by sales in descending order
+print("\nTop Sales:")
+display(df.sort_values(by="Sales", ascending=False).head(10))
+
+# Sort by quantity
+print("\nHighest Quantity Orders:")
+display(df.sort_values(by="Quantity", ascending=False).head(10))
+
+
+# --------------------------------------------
+# GROUPBY AND AGGREGATION
+# --------------------------------------------
+
+# Sales by category
+category_sales = df.groupby("Category")["Sales"].agg(
+    ["sum", "mean", "max", "min", "count"]
+).sort_values("sum", ascending=False)
+
+print("\nSales Analysis by Category:")
+display(category_sales)
+
+# Sales by city
+city_sales = df.groupby("City")["Sales"].agg(
+    ["sum", "mean", "max", "min", "count"]
+).sort_values("sum", ascending=False)
+
+print("\nSales Analysis by City:")
+display(city_sales)
+
+# Sales by product
+product_sales = df.groupby("Product")["Sales"].agg(
+    ["sum", "mean", "max", "min", "count"]
+).sort_values("sum", ascending=False)
+
+print("\nSales Analysis by Product:")
+display(product_sales)
+
+# Quantity sold by product
+product_quantity = df.groupby("Product")["Quantity"].sum().sort_values(
+    ascending=False
+)
+
+print("\nTotal Quantity Sold by Product:")
+display(product_quantity)
+
+# Sales by payment method
+payment_sales = df.groupby("Payment Method")["Sales"].agg(
+    ["sum", "mean", "count"]
+).sort_values("sum", ascending=False)
+
+print("\nSales Analysis by Payment Method:")
+display(payment_sales)
+
+
+# --------------------------------------------
+# OVERALL STATISTICS
+# --------------------------------------------
+
+total_sales = df["Sales"].sum()
+average_sales = df["Sales"].mean()
+highest_sales = df["Sales"].max()
+lowest_sales = df["Sales"].min()
+total_quantity = df["Quantity"].sum()
+number_of_orders = len(df)
+
+print("\n========== OVERALL SALES STATISTICS ==========")
+print("Total Sales:", total_sales)
+print("Average Sales:", round(average_sales, 2))
+print("Highest Sale:", highest_sales)
+print("Lowest Sale:", lowest_sales)
+print("Total Quantity Sold:", total_quantity)
+print("Number of Orders:", number_of_orders)
+
+
+# --------------------------------------------
+# TOP PERFORMING PRODUCTS AND CATEGORIES
+# --------------------------------------------
+
+top_product = product_sales["sum"].idxmax()
+top_category = category_sales["sum"].idxmax()
+top_city = city_sales["sum"].idxmax()
+top_payment = payment_sales["sum"].idxmax()
+
+print("\n========== TOP PERFORMERS ==========")
+print("Top Product:", top_product)
+print("Top Category:", top_category)
+print("Top City:", top_city)
+print("Most Used/Highest Sales Payment Method:", top_payment)
+
+
+# --------------------------------------------
+# MEANINGFUL OBSERVATIONS
+# --------------------------------------------
+
+print("\n========== OBSERVATIONS ==========")
+
+print(f"1. The total sales generated are {total_sales:.2f}.")
+print(f"2. The average sales value per order is {average_sales:.2f}.")
+print(f"3. The highest single order value is {highest_sales:.2f}.")
+print(f"4. The product with the highest total sales is {top_product}.")
+print(f"5. The category with the highest total sales is {top_category}.")
+print(f"6. The city with the highest total sales is {top_city}.")
+print(f"7. The total quantity of products sold is {total_quantity}.")
+print(f"8. The payment method generating the highest sales is {top_payment}.")
