@@ -1,0 +1,521 @@
+# ============================================================
+# ASSIGNMENT 1
+# HOTEL BOOKING DATASET - COMPLETE EXPLORATORY DATA ANALYSIS
+# ============================================================
+
+# -----------------------------
+# 1. IMPORT LIBRARIES
+# -----------------------------
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from google.colab import files
+
+sns.set_style("whitegrid")
+pd.set_option("display.max_columns", None)
+
+# -----------------------------
+# 2. LOAD DATASET
+# -----------------------------
+
+uploaded = files.upload()
+
+file_name = list(uploaded.keys())[0]
+df = pd.read_csv(file_name)
+
+print("Dataset loaded successfully!")
+print("Shape of dataset:", df.shape)
+
+display(df.head())
+
+
+# -----------------------------
+# 3. BASIC DATASET UNDERSTANDING
+# -----------------------------
+
+print("\nColumn Names:")
+print(df.columns.tolist())
+
+print("\nDataset Information:")
+df.info()
+
+print("\nStatistical Summary:")
+display(df.describe(include="all").T)
+
+
+# -----------------------------
+# 4. CHECK MISSING VALUES
+# -----------------------------
+
+print("\nMissing Values:")
+missing = df.isnull().sum()
+
+missing_table = pd.DataFrame({
+    "Missing Values": missing,
+    "Percentage": (missing / len(df)) * 100
+})
+
+display(
+    missing_table[
+        missing_table["Missing Values"] > 0
+    ].sort_values("Percentage", ascending=False)
+)
+
+
+# Missing-value visualization
+
+missing_percent = (df.isnull().sum() / len(df)) * 100
+missing_percent = missing_percent[missing_percent > 0]
+
+if len(missing_percent) > 0:
+    plt.figure(figsize=(10, 6))
+    sns.barplot(
+        x=missing_percent.values,
+        y=missing_percent.index
+    )
+    plt.title("Percentage of Missing Values")
+    plt.xlabel("Missing Values (%)")
+    plt.ylabel("Column")
+    plt.show()
+else:
+    print("No missing values found.")
+
+
+# -----------------------------
+# 5. CHECK DUPLICATE RECORDS
+# -----------------------------
+
+duplicate_count = df.duplicated().sum()
+
+print("\nNumber of duplicate records:", duplicate_count)
+
+df = df.drop_duplicates()
+
+print("Shape after removing duplicates:", df.shape)
+
+
+# -----------------------------
+# 6. CHECK DATA TYPES
+# -----------------------------
+
+print("\nData Types:")
+print(df.dtypes)
+
+
+# Convert date column if available
+
+if "reservation_status_date" in df.columns:
+    df["reservation_status_date"] = pd.to_datetime(
+        df["reservation_status_date"],
+        errors="coerce"
+    )
+
+
+# -----------------------------
+# 7. CHECK INCONSISTENT VALUES
+# -----------------------------
+
+categorical_columns = df.select_dtypes(
+    include="object"
+).columns
+
+for col in categorical_columns:
+    print("\nUnique values in:", col)
+    print(df[col].value_counts(dropna=False).head(20))
+
+
+# Remove unnecessary spaces
+
+for col in categorical_columns:
+    df[col] = df[col].astype(str).str.strip()
+
+
+# -----------------------------
+# 8. HANDLE MISSING VALUES
+# -----------------------------
+
+numeric_columns = df.select_dtypes(
+    include=np.number
+).columns
+
+categorical_columns = df.select_dtypes(
+    include="object"
+).columns
+
+# Numerical columns - median
+
+for col in numeric_columns:
+    df[col] = df[col].fillna(df[col].median())
+
+# Categorical columns - mode
+
+for col in categorical_columns:
+    if df[col].isnull().sum() > 0:
+        df[col] = df[col].fillna(df[col].mode()[0])
+
+
+print("\nRemaining missing values:",
+      df.isnull().sum().sum())
+
+
+# -----------------------------
+# 9. OUTLIER DETECTION USING IQR
+# -----------------------------
+
+numeric_columns = df.select_dtypes(
+    include=np.number
+).columns
+
+outlier_results = []
+
+for col in numeric_columns:
+
+    Q1 = df[col].quantile(0.25)
+    Q3 = df[col].quantile(0.75)
+
+    IQR = Q3 - Q1
+
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    outliers = (
+        (df[col] < lower_bound) |
+        (df[col] > upper_bound)
+    ).sum()
+
+    outlier_results.append([
+        col,
+        Q1,
+        Q3,
+        IQR,
+        lower_bound,
+        upper_bound,
+        outliers
+    ])
+
+outlier_table = pd.DataFrame(
+    outlier_results,
+    columns=[
+        "Variable",
+        "Q1",
+        "Q3",
+        "IQR",
+        "Lower Bound",
+        "Upper Bound",
+        "Number of Outliers"
+    ]
+)
+
+display(
+    outlier_table.sort_values(
+        "Number of Outliers",
+        ascending=False
+    )
+)
+
+
+# -----------------------------
+# 10. BOXPLOTS
+# -----------------------------
+
+for col in numeric_columns:
+
+    plt.figure(figsize=(8, 4))
+
+    sns.boxplot(x=df[col])
+
+    plt.title("Boxplot of " + col)
+    plt.xlabel(col)
+
+    plt.show()
+
+
+# -----------------------------
+# 11. DESCRIPTIVE STATISTICS
+# -----------------------------
+
+print("\nDescriptive Statistics:")
+
+display(
+    df[numeric_columns].describe().T
+)
+
+
+# -----------------------------
+# 12. UNIVARIATE ANALYSIS
+# -----------------------------
+
+# Hotel type
+
+if "hotel" in df.columns:
+
+    plt.figure(figsize=(7, 5))
+
+    sns.countplot(
+        data=df,
+        x="hotel"
+    )
+
+    plt.title("Distribution of Hotel Types")
+    plt.xlabel("Hotel Type")
+    plt.ylabel("Number of Bookings")
+
+    plt.show()
+
+
+# Cancellation
+
+if "is_canceled" in df.columns:
+
+    plt.figure(figsize=(7, 5))
+
+    sns.countplot(
+        data=df,
+        x="is_canceled"
+    )
+
+    plt.title("Booking Cancellation Distribution")
+    plt.xlabel("Cancellation Status")
+    plt.ylabel("Number of Bookings")
+
+    plt.show()
+
+
+# Lead time
+
+if "lead_time" in df.columns:
+
+    plt.figure(figsize=(8, 5))
+
+    sns.histplot(
+        df["lead_time"],
+        bins=40,
+        kde=True
+    )
+
+    plt.title("Distribution of Lead Time")
+    plt.xlabel("Lead Time")
+    plt.ylabel("Frequency")
+
+    plt.show()
+
+
+# ADR
+
+if "adr" in df.columns:
+
+    plt.figure(figsize=(8, 5))
+
+    sns.histplot(
+        df["adr"],
+        bins=40,
+        kde=True
+    )
+
+    plt.title("Distribution of Average Daily Rate")
+    plt.xlabel("ADR")
+    plt.ylabel("Frequency")
+
+    plt.show()
+
+
+# -----------------------------
+# 13. BIVARIATE ANALYSIS
+# -----------------------------
+
+# Hotel vs cancellation
+
+if {"hotel", "is_canceled"}.issubset(df.columns):
+
+    plt.figure(figsize=(8, 5))
+
+    sns.countplot(
+        data=df,
+        x="hotel",
+        hue="is_canceled"
+    )
+
+    plt.title("Cancellation by Hotel Type")
+
+    plt.show()
+
+
+# Market segment vs cancellation
+
+if {"market_segment", "is_canceled"}.issubset(df.columns):
+
+    plt.figure(figsize=(12, 6))
+
+    sns.countplot(
+        data=df,
+        x="market_segment",
+        hue="is_canceled"
+    )
+
+    plt.xticks(rotation=45)
+
+    plt.title("Cancellation by Market Segment")
+
+    plt.show()
+
+
+# ADR vs cancellation
+
+if {"is_canceled", "adr"}.issubset(df.columns):
+
+    plt.figure(figsize=(8, 5))
+
+    sns.boxplot(
+        data=df,
+        x="is_canceled",
+        y="adr"
+    )
+
+    plt.title("ADR by Cancellation Status")
+
+    plt.show()
+
+
+# -----------------------------
+# 14. GROUP-WISE ANALYSIS
+# -----------------------------
+
+if {"hotel", "adr"}.issubset(df.columns):
+
+    print("\nADR Statistics by Hotel:")
+
+    display(
+        df.groupby("hotel")["adr"]
+        .agg(["mean", "median", "min", "max"])
+        .round(2)
+    )
+
+
+if {"market_segment", "is_canceled"}.issubset(df.columns):
+
+    print("\nCancellation Rate by Market Segment:")
+
+    cancellation_rate = (
+        df.groupby("market_segment")["is_canceled"]
+        .mean()
+        .sort_values(ascending=False) * 100
+    )
+
+    display(
+        cancellation_rate.round(2)
+    )
+
+
+if "country" in df.columns:
+
+    print("\nTop 15 Countries by Number of Bookings:")
+
+    display(
+        df["country"]
+        .value_counts()
+        .head(15)
+    )
+
+
+# -----------------------------
+# 15. MONTHLY BOOKING TREND
+# -----------------------------
+
+if {
+    "arrival_date_month",
+    "arrival_date_year"
+}.issubset(df.columns):
+
+    month_order = [
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+        "june",
+        "july",
+        "august",
+        "september",
+        "october",
+        "november",
+        "december"
+    ]
+
+    monthly_bookings = (
+        df.groupby("arrival_date_month")
+        .size()
+        .reindex(month_order)
+    )
+
+    plt.figure(figsize=(12, 5))
+
+    sns.lineplot(
+        x=monthly_bookings.index,
+        y=monthly_bookings.values,
+        marker="o"
+    )
+
+    plt.xticks(rotation=45)
+
+    plt.title("Monthly Booking Trend")
+    plt.xlabel("Month")
+    plt.ylabel("Number of Bookings")
+
+    plt.show()
+
+
+# -----------------------------
+# 16. CORRELATION ANALYSIS
+# -----------------------------
+
+correlation = df.select_dtypes(
+    include=np.number
+).corr()
+
+plt.figure(figsize=(14, 10))
+
+sns.heatmap(
+    correlation,
+    annot=True,
+    fmt=".2f",
+    cmap="coolwarm"
+)
+
+plt.title("Correlation Heatmap")
+
+plt.show()
+
+
+# -----------------------------
+# 17. FINAL BUSINESS INSIGHTS
+# -----------------------------
+
+print("""
+KEY BUSINESS INSIGHTS
+
+1. Cancellation behaviour differs across hotel types and market segments.
+2. Booking demand varies across different months, indicating seasonality.
+3. ADR varies between customer groups and hotel categories.
+4. Lead time and other booking characteristics can be associated with cancellation behaviour.
+5. Booking patterns across countries and market segments can help identify important customer markets.
+""")
+
+
+# -----------------------------
+# 18. MANAGEMENT RECOMMENDATIONS
+# -----------------------------
+
+print("""
+MANAGEMENT RECOMMENDATIONS
+
+1. Introduce dynamic pricing based on demand and seasonality.
+2. Develop targeted cancellation policies for high-risk booking segments.
+3. Plan staffing and room availability according to seasonal demand.
+4. Focus marketing campaigns on high-value customer segments.
+5. Optimize booking/distribution channels based on revenue and cancellation rates.
+6. Continuously monitor data quality and remove duplicate/inconsistent records.
+7. Use booking, cancellation and pricing data for data-driven revenue management.
+""")
