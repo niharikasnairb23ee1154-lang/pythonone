@@ -1,0 +1,571 @@
+# ============================================================
+# ASSIGNMENT 2
+# STUDENT WELLBEING STATISTICAL ANALYSIS & PROBABILITY
+# ============================================================
+
+# -----------------------------
+# 1. IMPORT LIBRARIES
+# -----------------------------
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from google.colab import files
+
+sns.set_style("whitegrid")
+
+# -----------------------------
+# 2. LOAD DATASET
+# -----------------------------
+
+uploaded = files.upload()
+
+file_name = list(uploaded.keys())[0]
+
+df = pd.read_csv(file_name)
+
+print("Dataset loaded successfully!")
+print("Shape:", df.shape)
+
+display(df.head())
+
+
+# -----------------------------
+# 3. DATASET INSPECTION
+# -----------------------------
+
+print("\nDataset Information:")
+df.info()
+
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+print("\nDuplicate Records:")
+print(df.duplicated().sum())
+
+print("\nStatistical Summary:")
+display(df.describe(include="all").T)
+
+
+# -----------------------------
+# 4. REQUIRED VARIABLES
+# -----------------------------
+
+variables = [
+    "Weekly_Study_Hours",
+    "Average_Sleep_Hours",
+    "Daily_Screen_Time_Hours",
+    "Stress_Score",
+    "Academic_Readiness_Score"
+]
+
+
+# -----------------------------
+# 5. MEAN, MEDIAN AND MODE
+# -----------------------------
+
+statistics = pd.DataFrame(index=variables)
+
+statistics["Mean"] = df[variables].mean()
+statistics["Median"] = df[variables].median()
+statistics["Mode"] = df[variables].mode().iloc[0]
+
+print("\nMean, Median and Mode:")
+
+display(
+    statistics.round(2)
+)
+
+
+# -----------------------------
+# 6. RANGE, VARIANCE, SD, Q1, Q3, IQR
+# -----------------------------
+
+stats = pd.DataFrame(index=variables)
+
+stats["Minimum"] = df[variables].min()
+stats["Maximum"] = df[variables].max()
+
+stats["Range"] = (
+    df[variables].max() -
+    df[variables].min()
+)
+
+stats["Variance"] = df[variables].var()
+
+stats["Standard Deviation"] = (
+    df[variables].std()
+)
+
+stats["Q1"] = df[variables].quantile(0.25)
+
+stats["Q3"] = df[variables].quantile(0.75)
+
+stats["IQR"] = (
+    stats["Q3"] -
+    stats["Q1"]
+)
+
+print("\nVariability Statistics:")
+
+display(
+    stats.round(2)
+)
+
+
+# -----------------------------
+# 7. VARIABLE WITH GREATEST VARIABILITY
+# -----------------------------
+
+greatest_sd = stats[
+    "Standard Deviation"
+].idxmax()
+
+greatest_variance = stats[
+    "Variance"
+].idxmax()
+
+print(
+    "Variable with greatest standard deviation:",
+    greatest_sd
+)
+
+print(
+    "Variable with greatest variance:",
+    greatest_variance
+)
+
+
+# -----------------------------
+# 8. IQR OUTLIER DETECTION
+# -----------------------------
+
+outlier_variables = [
+    "Weekly_Study_Hours",
+    "Daily_Screen_Time_Hours",
+    "Commute_Time_Minutes",
+    "Monthly_Discretionary_Spending"
+]
+
+print("\nOUTLIER ANALYSIS")
+
+for col in outlier_variables:
+
+    Q1 = df[col].quantile(0.25)
+    Q3 = df[col].quantile(0.75)
+
+    IQR = Q3 - Q1
+
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    outliers = df[
+        (df[col] < lower_bound) |
+        (df[col] > upper_bound)
+    ]
+
+    print("\nVariable:", col)
+    print("Q1:", round(Q1, 2))
+    print("Q3:", round(Q3, 2))
+    print("IQR:", round(IQR, 2))
+    print("Lower Bound:", round(lower_bound, 2))
+    print("Upper Bound:", round(upper_bound, 2))
+    print("Number of Outliers:", len(outliers))
+
+
+# -----------------------------
+# 9. BOXPLOTS
+# -----------------------------
+
+for col in outlier_variables:
+
+    plt.figure(figsize=(8, 4))
+
+    sns.boxplot(
+        x=df[col]
+    )
+
+    plt.title("Boxplot - " + col)
+
+    plt.show()
+
+
+# -----------------------------
+# 10. MEAN AND MEDIAN
+# BEFORE/AFTER OUTLIER REMOVAL
+# -----------------------------
+
+col = "Weekly_Study_Hours"
+
+Q1 = df[col].quantile(0.25)
+Q3 = df[col].quantile(0.75)
+
+IQR = Q3 - Q1
+
+lower = Q1 - 1.5 * IQR
+upper = Q3 + 1.5 * IQR
+
+filtered_df = df[
+    (df[col] >= lower) &
+    (df[col] <= upper)
+]
+
+print("\nBEFORE REMOVING OUTLIERS")
+
+print("Mean:", round(df[col].mean(), 2))
+print("Median:", round(df[col].median(), 2))
+
+print("\nAFTER REMOVING OUTLIERS")
+
+print(
+    "Mean:",
+    round(filtered_df[col].mean(), 2)
+)
+
+print(
+    "Median:",
+    round(filtered_df[col].median(), 2)
+)
+
+
+# -----------------------------
+# 11. DEFINE PROBABILITY EVENTS
+# -----------------------------
+
+# Event A:
+# Student has Part-Time Job = Yes
+
+A = df["Part_Time_Job"].eq("Yes")
+
+# Event B:
+# Stress Score >= 7
+
+B = df["Stress_Score"] >= 7
+
+# Event C:
+# Scholarship = Yes
+
+C = df["Scholarship"].eq("Yes")
+
+# Event D:
+# Exercises at least 3 days per week
+
+D = df["Exercise_Frequency"] >= 3
+
+
+# -----------------------------
+# 12. BASIC PROBABILITIES
+# -----------------------------
+
+P_A = A.mean()
+P_B = B.mean()
+P_C = C.mean()
+P_D = D.mean()
+
+print("\nPROBABILITIES")
+
+print("P(A) =", round(P_A, 4))
+print("P(B) =", round(P_B, 4))
+print("P(C) =", round(P_C, 4))
+print("P(D) =", round(P_D, 4))
+
+
+# -----------------------------
+# 13. P(A OR B)
+# -----------------------------
+
+P_A_and_B = (A & B).mean()
+
+P_A_or_B = (
+    P_A +
+    P_B -
+    P_A_and_B
+)
+
+print("\nP(A or B) =", round(P_A_or_B, 4))
+
+
+# -----------------------------
+# 14. P(A AND B)
+# -----------------------------
+
+print(
+    "P(A and B) =",
+    round(P_A_and_B, 4)
+)
+
+
+# -----------------------------
+# 15. CONDITIONAL PROBABILITY
+# -----------------------------
+
+# P(A|B)
+
+P_A_given_B = (
+    (A & B).sum() /
+    B.sum()
+)
+
+# P(B|A)
+
+P_B_given_A = (
+    (A & B).sum() /
+    A.sum()
+)
+
+print("\nCONDITIONAL PROBABILITIES")
+
+print(
+    "P(A|B) =",
+    round(P_A_given_B, 4)
+)
+
+print(
+    "P(B|A) =",
+    round(P_B_given_A, 4)
+)
+
+
+# -----------------------------
+# 16. MUTUALLY EXCLUSIVE EVENTS
+# YEAR 1 AND YEAR 4
+# -----------------------------
+
+year1 = df["Year_of_Study"] == 1
+year4 = df["Year_of_Study"] == 4
+
+intersection = (
+    year1 & year4
+).sum()
+
+print("\nYEAR 1 AND YEAR 4")
+
+print(
+    "Intersection count:",
+    intersection
+)
+
+if intersection == 0:
+    print(
+        "Year 1 and Year 4 are mutually exclusive."
+    )
+else:
+    print(
+        "Year 1 and Year 4 are not mutually exclusive."
+    )
+
+
+# -----------------------------
+# 17. INDEPENDENCE OF A AND B
+# -----------------------------
+
+product = P_A * P_B
+
+print("\nINDEPENDENCE TEST")
+
+print(
+    "P(A and B) =",
+    round(P_A_and_B, 4)
+)
+
+print(
+    "P(A) × P(B) =",
+    round(product, 4)
+)
+
+difference = abs(
+    P_A_and_B -
+    product
+)
+
+print(
+    "Difference =",
+    round(difference, 4)
+)
+
+if difference < 0.01:
+    print(
+        "A and B appear approximately independent."
+    )
+else:
+    print(
+        "A and B do not appear independent."
+    )
+
+
+# -----------------------------
+# 18. BAYES' THEOREM
+# -----------------------------
+
+not_A = ~A
+
+P_not_A = not_A.mean()
+
+P_B_given_not_A = (
+    (B & not_A).sum() /
+    not_A.sum()
+)
+
+bayes_value = (
+    P_B_given_A * P_A
+) / (
+    P_B_given_A * P_A +
+    P_B_given_not_A * P_not_A
+)
+
+print("\nBAYES' THEOREM")
+
+print(
+    "P(B|A) =",
+    round(P_B_given_A, 4)
+)
+
+print(
+    "P(B|not A) =",
+    round(P_B_given_not_A, 4)
+)
+
+print(
+    "P(A) =",
+    round(P_A, 4)
+)
+
+print(
+    "P(A|B) using Bayes =",
+    round(bayes_value, 4)
+)
+
+print(
+    "P(A|B) directly =",
+    round(P_A_given_B, 4)
+)
+
+print(
+    "Difference =",
+    round(abs(
+        bayes_value -
+        P_A_given_B
+    ), 8)
+)
+
+
+# -----------------------------
+# 19. NORMAL DISTRIBUTION
+# -----------------------------
+
+score = df[
+    "Academic_Readiness_Score"
+]
+
+mean = score.mean()
+std = score.std()
+
+print("\nNORMAL DISTRIBUTION")
+
+print(
+    "Mean =",
+    round(mean, 2)
+)
+
+print(
+    "Standard Deviation =",
+    round(std, 2)
+)
+
+
+# -----------------------------
+# 20. Z-SCORE OF HIGHEST SCORE
+# -----------------------------
+
+highest_score = score.max()
+
+z_highest = (
+    highest_score -
+    mean
+) / std
+
+print("\nHighest Score:", highest_score)
+
+print(
+    "Z-score of highest score:",
+    round(z_highest, 2)
+)
+
+
+# -----------------------------
+# 21. Z-SCORE OF LOWEST SCORE
+# -----------------------------
+
+lowest_score = score.min()
+
+z_lowest = (
+    lowest_score -
+    mean
+) / std
+
+print("\nLowest Score:", lowest_score)
+
+print(
+    "Z-score of lowest score:",
+    round(z_lowest, 2)
+)
+
+
+# -----------------------------
+# 22. INTERPRETATION
+# -----------------------------
+
+print("""
+Z-SCORE INTERPRETATION
+
+A positive Z-score means the student's score
+is above the mean.
+
+A negative Z-score means the student's score
+is below the mean.
+
+The larger the absolute value of the Z-score,
+the farther the observation is from the mean.
+""")
+
+
+# -----------------------------
+# 23. 68-95-99.7 EMPIRICAL RULE
+# -----------------------------
+
+print("""
+68-95-99.7 EMPIRICAL RULE
+
+Within ±1 standard deviation: 68%
+Within ±2 standard deviations: 95%
+Within ±3 standard deviations: 99.7%
+""")
+
+
+# -----------------------------
+# 24. FIVE STATISTICAL OBSERVATIONS
+# -----------------------------
+
+print("""
+FIVE STATISTICAL OBSERVATIONS
+
+1. The variable with the highest standard deviation
+   demonstrates the greatest absolute variability.
+
+2. Differences between mean and median indicate
+   the presence of possible skewness.
+
+3. IQR analysis identifies unusually high or low
+   observations in study hours, screen time,
+   commuting time and discretionary spending.
+
+4. Probability calculations describe the proportion
+   of students with part-time jobs, high stress,
+   scholarships and regular exercise.
+
+5. The comparison of P(A and B) with P(A) × P(B)
+   indicates whether having a part-time job and
+   experiencing high stress appear independent.
+""")
