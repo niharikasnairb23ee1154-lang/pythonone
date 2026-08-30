@@ -1,0 +1,433 @@
+# DAY 14 - FOOD DELIVERY DATA VISUALIZATION PORTFOLIO
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# ---------------------------------------------------
+# 1. LOAD DATASET
+# ---------------------------------------------------
+
+df = pd.read_csv("food_delivery_business_performance.csv")
+
+print("First 5 rows:")
+print(df.head())
+
+print("\nDataset Shape:")
+print(df.shape)
+
+print("\nDataset Information:")
+print(df.info())
+
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+print("\nDuplicate Records:")
+print(df.duplicated().sum())
+
+# Remove duplicate records
+df = df.drop_duplicates()
+
+# ---------------------------------------------------
+# 2. BASIC STATISTICS
+# ---------------------------------------------------
+
+print("\nDescriptive Statistics:")
+print(df.describe(include="all"))
+
+# ---------------------------------------------------
+# 3. IDENTIFY COLUMN TYPES
+# ---------------------------------------------------
+
+numerical_columns = df.select_dtypes(
+    include=np.number
+).columns.tolist()
+
+categorical_columns = df.select_dtypes(
+    include=["object"]
+).columns.tolist()
+
+print("\nNumerical Columns:")
+print(numerical_columns)
+
+print("\nCategorical Columns:")
+print(categorical_columns)
+
+# ---------------------------------------------------
+# 4. LINE PLOT - ORDERS OVER TIME
+# ---------------------------------------------------
+
+# Change "Date" and "Orders" if your dataset uses different names
+
+if "Date" in df.columns and "Orders" in df.columns:
+
+    df["Date"] = pd.to_datetime(df["Date"])
+
+    daily_orders = df.groupby("Date")["Orders"].sum()
+
+    plt.figure(figsize=(12, 6))
+
+    plt.plot(
+        daily_orders.index,
+        daily_orders.values,
+        marker="o",
+        label="Orders"
+    )
+
+    plt.title("Orders Over Time")
+    plt.xlabel("Date")
+    plt.ylabel("Number of Orders")
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+# ---------------------------------------------------
+# 5. LINE PLOT - REVENUE OVER TIME
+# ---------------------------------------------------
+
+if "Date" in df.columns and "Revenue" in df.columns:
+
+    daily_revenue = df.groupby("Date")["Revenue"].sum()
+
+    plt.figure(figsize=(12, 6))
+
+    plt.plot(
+        daily_revenue.index,
+        daily_revenue.values,
+        marker="o",
+        label="Revenue"
+    )
+
+    plt.title("Revenue Over Time")
+    plt.xlabel("Date")
+    plt.ylabel("Revenue")
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+# ---------------------------------------------------
+# 6. BAR CHART - REVENUE BY CITY
+# ---------------------------------------------------
+
+if "City" in df.columns and "Revenue" in df.columns:
+
+    city_revenue = df.groupby("City")["Revenue"].sum().sort_values(
+        ascending=False
+    )
+
+    plt.figure(figsize=(10, 6))
+
+    city_revenue.plot(kind="bar")
+
+    plt.title("Revenue by City")
+    plt.xlabel("City")
+    plt.ylabel("Total Revenue")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+# ---------------------------------------------------
+# 7. BAR CHART - ORDERS BY CUISINE
+# ---------------------------------------------------
+
+if "Cuisine" in df.columns and "Orders" in df.columns:
+
+    cuisine_orders = df.groupby("Cuisine")["Orders"].sum().sort_values(
+        ascending=False
+    )
+
+    plt.figure(figsize=(10, 6))
+
+    cuisine_orders.plot(kind="bar")
+
+    plt.title("Orders by Cuisine")
+    plt.xlabel("Cuisine")
+    plt.ylabel("Total Orders")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+# ---------------------------------------------------
+# 8. SCATTER PLOT - MARKETING SPEND VS REVENUE
+# ---------------------------------------------------
+
+if "Marketing_Spend" in df.columns and "Revenue" in df.columns:
+
+    plt.figure(figsize=(8, 6))
+
+    sns.scatterplot(
+        data=df,
+        x="Marketing_Spend",
+        y="Revenue"
+    )
+
+    plt.title("Marketing Spend vs Revenue")
+    plt.xlabel("Marketing Spend")
+    plt.ylabel("Revenue")
+    plt.tight_layout()
+    plt.show()
+
+# ---------------------------------------------------
+# 9. SCATTER PLOT - DELIVERY TIME VS RATING
+# ---------------------------------------------------
+
+if "Delivery_Time" in df.columns and "Customer_Rating" in df.columns:
+
+    plt.figure(figsize=(8, 6))
+
+    sns.scatterplot(
+        data=df,
+        x="Delivery_Time",
+        y="Customer_Rating"
+    )
+
+    plt.title("Delivery Time vs Customer Rating")
+    plt.xlabel("Delivery Time")
+    plt.ylabel("Customer Rating")
+    plt.tight_layout()
+    plt.show()
+
+# ---------------------------------------------------
+# 10. HISTOGRAM - REVENUE DISTRIBUTION
+# ---------------------------------------------------
+
+if "Revenue" in df.columns:
+
+    plt.figure(figsize=(8, 6))
+
+    sns.histplot(
+        data=df,
+        x="Revenue",
+        kde=True
+    )
+
+    plt.title("Revenue Distribution")
+    plt.xlabel("Revenue")
+    plt.ylabel("Frequency")
+    plt.tight_layout()
+    plt.show()
+
+# ---------------------------------------------------
+# 11. HISTOGRAM - DELIVERY TIME
+# ---------------------------------------------------
+
+if "Delivery_Time" in df.columns:
+
+    plt.figure(figsize=(8, 6))
+
+    sns.histplot(
+        data=df,
+        x="Delivery_Time",
+        kde=True
+    )
+
+    plt.title("Delivery Time Distribution")
+    plt.xlabel("Delivery Time")
+    plt.ylabel("Frequency")
+    plt.tight_layout()
+    plt.show()
+
+# ---------------------------------------------------
+# 12. BOX PLOT - REVENUE BY CITY
+# ---------------------------------------------------
+
+if "City" in df.columns and "Revenue" in df.columns:
+
+    plt.figure(figsize=(10, 6))
+
+    sns.boxplot(
+        data=df,
+        x="City",
+        y="Revenue"
+    )
+
+    plt.title("Revenue Distribution by City")
+    plt.xlabel("City")
+    plt.ylabel("Revenue")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+# ---------------------------------------------------
+# 13. VIOLIN PLOT - RATINGS BY CUISINE
+# ---------------------------------------------------
+
+if "Cuisine" in df.columns and "Customer_Rating" in df.columns:
+
+    plt.figure(figsize=(10, 6))
+
+    sns.violinplot(
+        data=df,
+        x="Cuisine",
+        y="Customer_Rating"
+    )
+
+    plt.title("Customer Ratings by Cuisine")
+    plt.xlabel("Cuisine")
+    plt.ylabel("Customer Rating")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+# ---------------------------------------------------
+# 14. COUNT PLOT - ORDER CHANNEL
+# ---------------------------------------------------
+
+if "Order_Channel" in df.columns:
+
+    plt.figure(figsize=(8, 6))
+
+    sns.countplot(
+        data=df,
+        x="Order_Channel"
+    )
+
+    plt.title("Number of Orders by Order Channel")
+    plt.xlabel("Order Channel")
+    plt.ylabel("Count")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+# ---------------------------------------------------
+# 15. COUNT PLOT - WEATHER
+# ---------------------------------------------------
+
+if "Weather" in df.columns:
+
+    plt.figure(figsize=(8, 6))
+
+    sns.countplot(
+        data=df,
+        x="Weather"
+    )
+
+    plt.title("Orders by Weather Condition")
+    plt.xlabel("Weather")
+    plt.ylabel("Number of Records")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+# ---------------------------------------------------
+# 16. WEATHER VS REVENUE
+# ---------------------------------------------------
+
+if "Weather" in df.columns and "Revenue" in df.columns:
+
+    plt.figure(figsize=(10, 6))
+
+    sns.boxplot(
+        data=df,
+        x="Weather",
+        y="Revenue"
+    )
+
+    plt.title("Revenue by Weather Condition")
+    plt.xlabel("Weather")
+    plt.ylabel("Revenue")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+# ---------------------------------------------------
+# 17. ORDER CHANNEL VS REVENUE
+# ---------------------------------------------------
+
+if "Order_Channel" in df.columns and "Revenue" in df.columns:
+
+    channel_revenue = df.groupby(
+        "Order_Channel"
+    )["Revenue"].mean().sort_values(ascending=False)
+
+    plt.figure(figsize=(8, 6))
+
+    channel_revenue.plot(kind="bar")
+
+    plt.title("Average Revenue by Order Channel")
+    plt.xlabel("Order Channel")
+    plt.ylabel("Average Revenue")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+# ---------------------------------------------------
+# 18. CORRELATION HEATMAP
+# ---------------------------------------------------
+
+numeric_df = df.select_dtypes(include=np.number)
+
+correlation_matrix = numeric_df.corr()
+
+plt.figure(figsize=(12, 8))
+
+sns.heatmap(
+    correlation_matrix,
+    annot=True,
+    cmap="coolwarm",
+    fmt=".2f"
+)
+
+plt.title("Correlation Heatmap")
+plt.tight_layout()
+plt.show()
+
+# ---------------------------------------------------
+# 19. DISPLAY STRONG CORRELATIONS
+# ---------------------------------------------------
+
+print("\nStrong Correlations:")
+
+for i in range(len(correlation_matrix.columns)):
+    for j in range(i + 1, len(correlation_matrix.columns)):
+
+        correlation = correlation_matrix.iloc[i, j]
+
+        if abs(correlation) >= 0.7:
+
+            print(
+                correlation_matrix.columns[i],
+                "and",
+                correlation_matrix.columns[j],
+                ":",
+                round(correlation, 2)
+            )
+
+# ---------------------------------------------------
+# 20. SUMMARY STATISTICS BY CITY
+# ---------------------------------------------------
+
+if "City" in df.columns:
+
+    city_summary = df.groupby("City").agg({
+        "Revenue": ["mean", "sum"],
+        "Orders": ["mean", "sum"]
+    })
+
+    print("\nCity Performance Summary:")
+    print(city_summary)
+
+# ---------------------------------------------------
+# 21. SUMMARY STATISTICS BY CUISINE
+# ---------------------------------------------------
+
+if "Cuisine" in df.columns:
+
+    cuisine_summary = df.groupby("Cuisine").agg({
+        "Revenue": ["mean", "sum"],
+        "Orders": ["mean", "sum"]
+    })
+
+    print("\nCuisine Performance Summary:")
+    print(cuisine_summary)
+
+# ---------------------------------------------------
+# 22. FINAL DATASET CHECK
+# ---------------------------------------------------
+
+print("\nFinal Dataset Shape:", df.shape)
+
+print("\nVisualization portfolio completed successfully!")
