@@ -1,0 +1,250 @@
+# DAY 12 - USED CAR DATA PREPROCESSING
+
+import pandas as pd
+import numpy as np
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+
+# ---------------------------------------------------
+# 1. LOAD DATASET
+# ---------------------------------------------------
+
+df = pd.read_csv("used_car_resale_dataset.csv")
+
+print("First 5 rows:")
+print(df.head())
+
+print("\nDataset Shape:", df.shape)
+
+print("\nDataset Information:")
+print(df.info())
+
+# ---------------------------------------------------
+# 2. CHECK MISSING VALUES
+# ---------------------------------------------------
+
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+# Remove duplicate records
+df = df.drop_duplicates()
+
+print("\nShape after removing duplicates:", df.shape)
+
+# ---------------------------------------------------
+# 3. IDENTIFY NUMERICAL AND CATEGORICAL COLUMNS
+# ---------------------------------------------------
+
+numerical_columns = df.select_dtypes(include=np.number).columns.tolist()
+categorical_columns = df.select_dtypes(include=["object"]).columns.tolist()
+
+print("\nNumerical Columns:")
+print(numerical_columns)
+
+print("\nCategorical Columns:")
+print(categorical_columns)
+
+# ---------------------------------------------------
+# 4. HANDLE MISSING VALUES
+# ---------------------------------------------------
+
+for column in numerical_columns:
+    df[column] = df[column].fillna(df[column].median())
+
+for column in categorical_columns:
+    df[column] = df[column].fillna(df[column].mode()[0])
+
+print("\nMissing values after handling:")
+print(df.isnull().sum())
+
+# ---------------------------------------------------
+# 5. OUTLIER DETECTION USING IQR
+# ---------------------------------------------------
+
+def handle_outliers_iqr(data, columns):
+    data = data.copy()
+
+    for column in columns:
+        Q1 = data[column].quantile(0.25)
+        Q3 = data[column].quantile(0.75)
+
+        IQR = Q3 - Q1
+
+        lower_limit = Q1 - 1.5 * IQR
+        upper_limit = Q3 + 1.5 * IQR
+
+        # Cap outliers instead of deleting valuable records
+        data[column] = data[column].clip(
+            lower=lower_limit,
+            upper=upper_limit
+        )
+
+    return data
+
+
+df = handle_outliers_iqr(df, numerical_columns)
+
+print("\nOutliers handled using IQR method.")
+
+# ---------------------------------------------------
+# 6. IDENTIFY TARGET VARIABLE
+# ---------------------------------------------------
+
+# Change this column name if the dataset uses another target name
+target_column = "Price"
+
+if target_column not in df.columns:
+    print("\nAvailable columns:")
+    print(df.columns.tolist())
+    raise ValueError(
+        "Please change 'target_column' to the actual resale price column."
+    )
+
+X = df.drop(columns=[target_column])
+y = df[target_column]
+
+print("\nFeatures:")
+print(X.head())
+
+print("\nTarget:")
+print(y.head())
+
+# ---------------------------------------------------
+# 7. TRAIN-TEST SPLIT
+# ---------------------------------------------------
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42
+)
+
+print("\nTraining data shape:", X_train.shape)
+print("Testing data shape:", X_test.shape)
+
+# ---------------------------------------------------
+# 8. IDENTIFY COLUMN TYPES AFTER SPLIT
+# ---------------------------------------------------
+
+numeric_features = X_train.select_dtypes(
+    include=np.number
+).columns.tolist()
+
+categorical_features = X_train.select_dtypes(
+    include=["object"]
+).columns.tolist()
+
+# ---------------------------------------------------
+# 9. PREPROCESSING PIPELINE
+# ---------------------------------------------------
+
+numeric_transformer = Pipeline(
+    steps=[
+        ("scaler", StandardScaler())
+    ]
+)
+
+categorical_transformer = Pipeline(
+    steps=[
+        ("encoder", OneHotEncoder(
+            handle_unknown="ignore",
+            sparse_output=False
+        ))
+    ]
+)
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        ("num", numeric_transformer, numeric_features),
+        ("cat", categorical_transformer, categorical_features)
+    ]
+)
+
+# ---------------------------------------------------
+# 10. FIT ONLY ON TRAINING DATA
+# ---------------------------------------------------
+
+X_train_processed = preprocessor.fit_transform(X_train)
+
+# Apply the already fitted transformations to test data
+X_test_processed = preprocessor.transform(X_test)
+
+print("\nPreprocessing completed.")
+print("Processed training shape:", X_train_processed.shape)
+print("Processed testing shape:", X_test_processed.shape)
+
+# ---------------------------------------------------
+# 11. CREATE PROCESSED DATAFRAMES
+# ---------------------------------------------------
+
+feature_names = preprocessor.get_feature_names_out()
+
+X_train_processed_df = pd.DataFrame(
+    X_train_processed,
+    columns=feature_names,
+    index=X_train.index
+)
+
+X_test_processed_df = pd.DataFrame(
+    X_test_processed,
+    columns=feature_names,
+    index=X_test.index
+)
+
+print("\nProcessed Training Dataset:")
+print(X_train_processed_df.head())
+
+print("\nProcessed Testing Dataset:")
+print(X_test_processed_df.head())
+
+# ---------------------------------------------------
+# 12. VERIFY STANDARDIZATION
+# ---------------------------------------------------
+
+print("\nProcessed numerical feature means:")
+print(X_train_processed_df.mean().head())
+
+print("\nProcessed numerical feature standard deviations:")
+print(X_train_processed_df.std().head())
+
+# ---------------------------------------------------
+# 13. SAVE PREPROCESSED DATASETS
+# ---------------------------------------------------
+
+train_processed = X_train_processed_df.copy()
+train_processed["Target"] = y_train.values
+
+test_processed = X_test_processed_df.copy()
+test_processed["Target"] = y_test.values
+
+train_processed.to_csv(
+    "used_car_preprocessed_train.csv",
+    index=False
+)
+
+test_processed.to_csv(
+    "used_car_preprocessed_test.csv",
+    index=False
+)
+
+print("\nPreprocessed datasets saved successfully!")
+
+# ---------------------------------------------------
+# 14. FINAL VERIFICATION
+# ---------------------------------------------------
+
+print("\nFinal Training Dataset Shape:")
+print(train_processed.shape)
+
+print("\nFinal Testing Dataset Shape:")
+print(test_processed.shape)
+
+print("\nAny missing values in training data:")
+print(train_processed.isnull().sum().sum())
+
+print("\nAny missing values in testing data:")
+print(test_processed.isnull().sum().sum())
